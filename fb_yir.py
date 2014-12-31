@@ -10,6 +10,10 @@
 ## It will collect metadata about every post that appears on your Facebook wall.
 ## To compare to the Year in Review, be sure to filter out things you didn't post yourself.
 ## Ie., select * from DB_TABLE where post_story is NULL and post_link = 'Your Name'
+##
+## Final note: some photos will not be retrieved because of user permissions. I had to
+## add one photo post (with 4 photos) manually to the database, because it was included 
+## in my Year in Review but it was not returned from the API.
 ## ========================
 
 import facebook
@@ -93,6 +97,28 @@ def grab_posts(until_num):
 
 		cursor.execute('INSERT INTO '+DB_TABLE+' (post_type, post_story, post_from, post_link, created_time, post_id, post_message, num_likes, num_comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)', (post_type, post_story, post_link, post_from, created_time, post_id, post_message, num_likes, num_comments))
 		conn.commit()
+
+db_drop_string = '''
+DROP TABLE IF EXISTS "public"."'''+DB_TABLE+'''";
+CREATE TABLE "public"."'''+DB_TABLE+'''" (
+	"post_type" text COLLATE "default",
+	"created_time" timestamp(6) NULL,
+	"post_id" text COLLATE "default",
+	"post_message" text COLLATE "default",
+	"num_likes" int4,
+	"num_comments" int4,
+	"in_yearinreview_yn" int4,
+	"post_story" text COLLATE "default",
+	"post_link" text COLLATE "default",
+	"post_from" text COLLATE "default"
+)
+WITH (OIDS=FALSE);
+ALTER TABLE "public"."'''+DB_TABLE+'''" OWNER TO "'''+DB_USERNAME+'''";
+'''
+
+cursor.execute(db_drop_string)
+conn.commit()
+
 
 while created_date > time.strptime('2013-12-31', '%Y-%m-%d'): #for some reason this doesn't actually stop it; gotta fix later
 	grab_posts(until_num_storage[-1])

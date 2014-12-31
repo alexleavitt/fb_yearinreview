@@ -17,13 +17,16 @@ import urllib2
 import datetime
 import time
 import psycopg2
-import config
+from config import *
 
 conn_string = "host='localhost' dbname="+DATABASE_NAME+" user="+DB_USERNAME+" password="+DB_PASSWORD
 conn = psycopg2.connect(conn_string)
 cursor = conn.cursor()
 
-token = FB_TOKEN
+## this token can be found here: https://developers.facebook.com/tools/explorer?method=GET&path=me%2Ffeed&version=v2.2
+## click Get Access Token and select ALL of the options, including in the Extended Permissions section
+## be aware that this token can expire in a few hours after generation
+token = FB_TOKEN 
 
 graph = facebook.GraphAPI(token)
 
@@ -88,8 +91,8 @@ def grab_posts(until_num):
 		print num_comments
 		print ""
 
-		# cursor.execute('INSERT INTO '+DB_TABLE+' (post_type, post_story, post_from, post_link, created_time, post_id, post_message, num_likes, num_comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)', (post_type, post_story, post_link, post_from, created_time, post_id, post_message, num_likes, num_comments))
-		# conn.commit()
+		cursor.execute('INSERT INTO '+DB_TABLE+' (post_type, post_story, post_from, post_link, created_time, post_id, post_message, num_likes, num_comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)', (post_type, post_story, post_link, post_from, created_time, post_id, post_message, num_likes, num_comments))
+		conn.commit()
 
 while created_date > time.strptime('2013-12-31', '%Y-%m-%d'): #for some reason this doesn't actually stop it; gotta fix later
 	grab_posts(until_num_storage[-1])
